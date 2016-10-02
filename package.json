@@ -1,0 +1,24 @@
+{
+  "name": "singalong",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "0.6.1"
+  },
+  "dependencies": {
+    "buffer": "5.0.0",
+    "crypto-browserify": "3.11.0",
+    "opus-recorder": "0.5.0",
+    "react": "15.3.2",
+    "react-dom": "15.3.2",
+    "recorderjs": "1.0.1",
+    "request": "2.75.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://us-west-2.api.acrcloud.com"
+}
