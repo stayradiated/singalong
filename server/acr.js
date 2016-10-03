@@ -1,7 +1,7 @@
-import crypto from 'crypto-browserify'
-import request from 'request'
+const crypto  = require('crypto')
+const request = require('request')
 
-export default class ACRCloud {
+class ACRCloud {
   constructor (conf) {
     this.requrl 						= conf.requrl || 'ap-southeast-1.api.acrcloud.com'
     this.http_method 				= conf.http_method || 'POST'
@@ -58,10 +58,35 @@ export default class ACRCloud {
         if (err != null) {
           reject(err)
         } else {
-          resolve(res)
+          resolve(this.parseResult(JSON.parse(res.body)))
         }
       })
     })
+  }
+
+  // Parse result from server
+  parseResult (data) {
+    if (
+      data == null ||
+      data.metadata == null ||
+      data.metadata.music.length <= 0
+    ) {
+      return null
+    }
+
+    const music = data.metadata.music[0]
+
+    return {
+      id: music.acrid,
+      playOffsetMs: parseInt(music.play_offset_ms, 10),
+      durationMs: parseInt(music.duration_ms, 10),
+      releaseDate: music.release_date,
+      title: music.title,
+      album: music.album.name,
+      label: music.label,
+      artist: music.artists.map((artist) => artist.name).join(', '),
+      genres: music.genres && music.genres.map((genre) => genre.name).join(', '),
+    }
   }
 
   // Identify base64 encoded audio file
@@ -75,3 +100,5 @@ export default class ACRCloud {
     return this.post(postData)
   }
 }
+
+module.exports = ACRCloud

@@ -1,9 +1,6 @@
 import React, {Component} from 'react'
-import {Buffer} from 'buffer'
 
 import './App.css'
-
-import ACRCloud from './ACR'
 
 const {Recorder} = window
 
@@ -19,19 +16,11 @@ class App extends Component {
       result: null,
     }
 
-    this.acr = new ACRCloud({
-      requrl: 'localhost:3000',
-      data_type: 'audio',
-      access_key: process.env.REACT_APP_ACR_KEY,
-      access_secret: process.env.REACT_APP_ACR_SECRET,
-    })
-
     this.recorder = null
 
     this.handleStreamReady = this.handleStreamReady.bind(this)
     this.handleStopRecording = this.handleStopRecording.bind(this)
     this.startRecording = this.startRecording.bind(this)
-    this.identifyRecording = this.identifyRecording.bind(this)
   }
 
   handleStreamReady () {
@@ -43,9 +32,19 @@ class App extends Component {
 
   handleStopRecording (event) {
     const dataBlob = new Blob([event.detail], {type: 'audio/ogg'})
+
+    const formData = new FormData()
+    formData.append('data', dataBlob)
+
+    fetch('/api/identify', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((json) => this.setState({lyrics: json.result}))
+
     const fileReader = new FileReader()
     fileReader.addEventListener('load', () => {
-      this.identifyRecording(fileReader.result)
       this.setState({
         src: fileReader.result,
       })
@@ -64,25 +63,8 @@ class App extends Component {
     this.recorder.initStream()
   }
 
-  identifyRecording (src) {
-    const buffer = new Buffer(
-      src.replace(/^data:audio\/ogg;base64,/, ''), 'base64')
-
-    this.acr.identify(buffer)
-      .then((res) => {
-        const json = JSON.parse(res.body)
-        this.setState({result: json})
-      })
-      .catch((err) => console.error(err))
-  }
-
   render () {
-    const {src, result} = this.state
-
-    let music
-    if (result != null) {
-      music = result.metadata.music[0]
-    }
+    const {src, lyrics} = this.state
 
     return (
       <div className='App'>
@@ -98,17 +80,9 @@ class App extends Component {
           {src != null && <audio controls src={src} />}
         </div>
 
-        {music != null && (
-          <div>
-            <div>Title: {music.title}</div>
-            <div>Play Offset: {music.play_offset_ms  / 1000}s</div>
-            <div>Artists: {music.artists.map((artist) => (
-              <span>{artist.name},</span>
-            ))}</div>
-            <div>Album: {music.album.name}</div>
-            Genres: {music.genres.map((genre) => (
-              <span>{genre.name},</span>
-            ))}
+        {lyrics != null && (
+          <div style={{whiteSpace: 'pre'}}>
+            {lyrics.lyrics.replace(/googletag\.cmd\.push\(function\(\) \{ googletag.display\("[^"]+"\); \}\);/, '')}
           </div>
         )}
       </div>

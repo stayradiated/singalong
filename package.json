@@ -3,11 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
+    "concurrently": "3.1.0",
+    "nodemon": "1.10.2",
     "react-scripts": "0.6.1"
   },
   "dependencies": {
     "buffer": "5.0.0",
     "crypto-browserify": "3.11.0",
+    "express": "4.14.0",
+    "form-data": "2.1.0",
+    "lyricist": "0.1.1",
+    "multer": "1.2.0",
+    "node-fetch": "1.6.3",
     "opus-recorder": "0.5.0",
     "react": "15.3.2",
     "react-dom": "15.3.2",
@@ -15,10 +22,12 @@
     "request": "2.75.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently 'npm run start-server' 'npm run start-client'",
+    "start-server": "nodemon server/index.js",
+    "start-client": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://us-west-2.api.acrcloud.com"
+  "proxy": "http://localhost:5000"
 }
