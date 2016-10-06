@@ -11,9 +11,11 @@ class App extends Component {
     super()
 
     this.state = {
+      recording: false,
       recorder: null,
       src: null,
       result: null,
+      countdown: RECORD_TIME / 1000,
     }
 
     this.recorder = null
@@ -23,14 +25,32 @@ class App extends Component {
     this.startRecording = this.startRecording.bind(this)
   }
 
+  componentDidMount () {
+    this.startRecording()
+  }
+
   handleStreamReady () {
     this.recorder.start()
     setTimeout(() => {
       this.recorder.stop()
     }, RECORD_TIME)
+
+    this.setState({countdown: RECORD_TIME / 1000})
+
+    const timer = setInterval(() => {
+      let {countdown} = this.state
+      countdown -= 1
+      this.setState({countdown})
+
+      if (countdown == 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
   }
 
   handleStopRecording (event) {
+    this.setState({recording: false})
+
     const dataBlob = new Blob([event.detail], {type: 'audio/ogg'})
 
     const formData = new FormData()
@@ -41,7 +61,9 @@ class App extends Component {
       body: formData,
     })
       .then((res) => res.json())
-      .then((json) => this.setState({lyrics: json.result}))
+      .then((json) => this.setState({result: json}))
+      .catch(() => null)
+      .then(() => this.startRecording())
 
     const fileReader = new FileReader()
     fileReader.addEventListener('load', () => {
@@ -61,28 +83,23 @@ class App extends Component {
     this.recorder.addEventListener('dataAvailable', this.handleStopRecording)
 
     this.recorder.initStream()
+
+    this.setState({recording: true})
   }
 
   render () {
-    const {src, lyrics} = this.state
+    const {recording, countdown, src, result} = this.state
 
     return (
-      <div className='App'>
-        <div className='App-header'>
-          <h2>Sing Along</h2>
-        </div>
+      <div>
+        <p>{countdown}</p>
 
-        <div>
-          <button onClick={this.startRecording}>SHAZAM!</button>
-        </div>
-
-        <div>
-          {src != null && <audio controls src={src} />}
-        </div>
-
-        {lyrics != null && (
-          <div style={{whiteSpace: 'pre'}}>
-            {lyrics.lyrics.replace(/googletag\.cmd\.push\(function\(\) \{ googletag.display\("[^"]+"\); \}\);/, '')}
+        {result != null && (
+          <div>
+            <h5>{result.primary_artist.name} - {result.title}</h5>
+            <div style={{whiteSpace: 'pre'}}>
+              {result.lyrics}
+            </div>
           </div>
         )}
       </div>
